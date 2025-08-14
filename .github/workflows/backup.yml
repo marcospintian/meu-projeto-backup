@@ -1,0 +1,41 @@
+name: Rotina de Backup do PostgreSQL
+
+on:
+  schedule:
+    - cron: '0 1 * * *'  # Roda todos os dias à 1:00 AM (UTC)
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do Repositório
+        uses: actions/checkout@v2
+
+      - name: Instalar Dependências (PostgreSQL Client e gsutil)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+          sudo apt-get install -y google-cloud-sdk
+
+      - name: Configurar Credenciais do Google Cloud
+        run: |
+          echo "${{ secrets.GCS_SERVICE_ACCOUNT_KEY }}" > gcloud-key.json
+          gcloud auth activate-service-account --key-file=gcloud-key.json
+
+      - name: Realizar o Backup e Enviar para o GCS
+        env:
+          PGPASSWORD: ${{ secrets.DB_PASSWORD }}
+          PGUSER: ${{ secrets.DB_USER }}
+          PGHOST: ${{ secrets.DB_HOST }}
+          PGPORT: ${{ secrets.DB_PORT }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          GCS_BUCKET: ${{ secrets.GCS_BUCKET }}
+        run: |
+          BACKUP_FILE="backup_$(date +%Y-%m-%d_%H-%M-%S).sql.gz"
+
+          pg_dump --host="$PGHOST" --port="$PGPORT" --username="$PGUSER" --dbname="$DB_NAME" --clean --no-owner | gzip > $BACKUP_FILE
+
+          gsutil cp "$BACKUP_FILE" "gs://$GCS_BUCKET/backups/$BACKUP_FILE"
+
+          echo "Backup concluído e enviado para o Google Cloud Storage!"
