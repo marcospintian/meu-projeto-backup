@@ -2,7 +2,7 @@ name: Rotina de Backup do PostgreSQL
 
 on:
   schedule:
-    - cron: '45 12 * * *'  # Roda todos os dias à 1:00 AM (UTC)
+    - cron: '30 13 * * *'  # Roda todos os dias à 1:00 AM (UTC)
 
 jobs:
   backup:
@@ -19,9 +19,9 @@ jobs:
           sudo apt-get install -y google-cloud-cli
 
       - name: Configurar Credenciais do Google Cloud
-        run: |
-          echo "${{ secrets.GCS_SERVICE_ACCOUNT_KEY }}" > gcloud-key.json
-          gcloud auth activate-service-account --key-file=gcloud-key.json
+          run: |
+            echo '${{ secrets.GCS_SERVICE_ACCOUNT_KEY }}' > gcloud-key.json
+            gcloud auth activate-service-account --key-file=gcloud-key.json
 
       - name: Realizar o Backup e Enviar para o GCS
         env:
