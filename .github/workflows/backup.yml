@@ -2,7 +2,7 @@ name: Rotina de Backup do PostgreSQL
 
 on:
   schedule:
-    - cron: '5 20 * * *'  # Roda todos os dias à 1:00 AM (UTC)
+    - cron: '45 12 * * *'  # Roda todos os dias à 1:00 AM (UTC)
 
 jobs:
   backup:
